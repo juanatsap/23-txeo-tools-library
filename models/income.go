@@ -33,3 +33,13 @@ func (incomes Incomes) GetIncomingAmount() float64 {
 	}
 	return amount
 }
+
+func (incomes Incomes) GetIncomesByDate(month Month, year Year) Incomes {
+	var filteredIncomes Incomes
+	for _, income := range incomes {
+		if (income.Date.Month() == time.Month(month.Time) || month.Time == 0) && (income.Date.Year() == year.Time.Year() || year.Time == time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC)) {
+			filteredIncomes = append(filteredIncomes, income)
+		}
+	}
+	return filteredIncomes
+}
