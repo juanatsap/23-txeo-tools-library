@@ -1,13 +1,54 @@
 package core
 
 import (
+	"io"
 	"os"
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/logrusorgru/aurora"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/mod/modfile"
 )
 
+/* ╭──────────────────────────────────────────╮ */
+/* │             DUAL OUPUT TYPE              │ */
+/* ╰──────────────────────────────────────────╯ */
+type dualOutputHook struct {
+	consoleFormatter *logrus.TextFormatter
+	fileFormatter    *logrus.TextFormatter
+	fileWriter       *os.File
+}
+
+func (hook *dualOutputHook) Levels() []logrus.Level {
+	return logrus.AllLevels // Apply hook to all log levels
+}
+func (hook *dualOutputHook) Fire(entry *logrus.Entry) error {
+	// Serialize log message for console
+	consoleMessage, err := hook.consoleFormatter.Format(entry)
+	if err != nil {
+		return err
+	}
+	// Write to console
+	_, err = os.Stdout.Write(consoleMessage)
+	if err != nil {
+		return err
+	}
+
+	// Serialize log message for file
+	fileMessage, err := hook.fileFormatter.Format(entry)
+	if err != nil {
+		return err
+	}
+	// Write to file
+	_, err = hook.fileWriter.Write(fileMessage)
+	return err
+}
+
+/* ╭──────────────────────────────────────────╮ */
+/* │             LOGRUS FUNCTIONS             │ */
+/* ╰──────────────────────────────────────────╯ */
 func InitLogRus() *log.Logger {
 	// Log as JSON instead of the default ASCII formatter.
 
@@ -29,7 +70,7 @@ func InitLogRus() *log.Logger {
 	case "error":
 		log.SetLevel(log.ErrorLevel)
 	default:
-		log.SetLevel(log.InfoLevel)
+		log.SetLevel(log.DebugLevel)
 	}
 
 	log.SetFormatter(&log.TextFormatter{
@@ -46,7 +87,6 @@ func InitLogRus() *log.Logger {
 	// ExampleLogrus()
 	return log.New()
 }
-
 func ExampleLogrus() {
 
 	log.WithFields(log.Fields{
@@ -75,4 +115,79 @@ func ExampleLogrus() {
 	contextLogger.Info("Me too")
 	// Get TUI instance and load all
 	// framework.InitTUI()
+}
+func InitLogRusWithFile(level logrus.Level) (*log.Logger, func()) {
+	// Obtener el nombre del módulo del proyecto
+	moduleName := getModuleName()
+	logFilePath := moduleName + ".log"
+
+	log := InitLogRus()
+
+	// Set log level
+	log.SetLevel(level)
+
+	// Disable default Logrus output to avoid duplicates
+	log.SetOutput(io.Discard)
+
+	// Open log file
+	logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("failed to open log file: %v", err)
+	}
+
+	// Create custom hook
+	hook := &dualOutputHook{
+		consoleFormatter: &logrus.TextFormatter{
+			ForceColors:   true,
+			FullTimestamp: true,
+		},
+		fileFormatter: &logrus.TextFormatter{
+			DisableColors: true,
+			FullTimestamp: true,
+		},
+		fileWriter: logFile,
+	}
+
+	// Add hook to logger
+	log.AddHook(hook)
+
+	// Clean up the log file when the program exits
+	cleanup := func() error {
+		return logFile.Close()
+	}
+	cleanUpfunc := func() {
+		if err := cleanup(); err != nil {
+			log.Fatalf("failed to close log file: %v", err)
+			os.Exit(1)
+		}
+	}
+
+	// Example log messages
+	log.Infof("🤘 Starting %s", aurora.Bold(aurora.BrightBlue(moduleName)))
+	log.Warnf("⚠️ This is a warning message")
+	log.Errorf("🧨 This is an error message")
+	log.Debugf("👀 This is a debug message")
+
+	return log, cleanUpfunc
+}
+
+/* ╭──────────────────────────────────────────╮ */
+/* │              AUX FUNCTIONS               │ */
+/* ╰──────────────────────────────────────────╯ */
+// getModuleName parses the go.mod file and returns the module name.
+func getModuleName() string {
+	// Read the go.mod file
+	data, err := os.ReadFile("go.mod")
+	if err != nil {
+		log.Fatalf("failed to read go.mod: %v", err)
+	}
+
+	// Parse the go.mod file
+	modFile, err := modfile.Parse("go.mod", data, nil)
+	if err != nil {
+		log.Fatalf("failed to parse go.mod: %v", err)
+	}
+
+	// Return the module name
+	return modFile.Module.Mod.Path
 }

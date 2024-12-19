@@ -12,7 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func InitDB() (*sql.DB, error) {
+func InitDBMony() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "./mony.db")
 	if err != nil {
 		return nil, err
@@ -220,4 +220,59 @@ func parseAmount(value string) (float64, error) {
 		return 0.0, nil
 	}
 	return strconv.ParseFloat(cleanedValue, 64)
+}
+
+func InitDB(dbPath string, reset bool) (*sql.DB, error) {
+
+	if reset {
+		// Delete the database if it already exists
+		if _, err := os.Stat(dbPath); err == nil {
+			err = os.Remove(dbPath)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create tables if not exist
+	schema := `
+    CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        short_name TEXT,
+        deleted BOOLEAN DEFAULT 0,
+        traduction TEXT,
+        icon TEXT,
+        color TEXT,
+        subcategory TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS concepts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        short_name TEXT,
+        icon TEXT,
+        FOREIGN KEY (category_id) REFERENCES categories(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS tags (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        concept_id INTEGER NOT NULL,
+        name TEXT,
+        slug TEXT,
+        FOREIGN KEY (concept_id) REFERENCES concepts(id)
+    );
+    `
+	_, err = db.Exec(schema)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }

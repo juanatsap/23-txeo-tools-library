@@ -5,10 +5,12 @@ go 1.23.2
 require (
 	github.com/adlio/trello v1.12.0
 	github.com/joho/godotenv v1.5.1
+	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/ozgio/strutil v0.4.0
 	github.com/sirupsen/logrus v1.9.3
 	go.mongodb.org/mongo-driver v1.17.1
+	golang.org/x/mod v0.22.0
 )
 
 require (
