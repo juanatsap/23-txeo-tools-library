@@ -139,7 +139,7 @@ func InitLogRusWithFile(level logrus.Level) (*log.Logger, func()) {
 	hook := &dualOutputHook{
 		consoleFormatter: &logrus.TextFormatter{
 			ForceColors:   true,
-			FullTimestamp: true,
+			FullTimestamp: false,
 		},
 		fileFormatter: &logrus.TextFormatter{
 			DisableColors: true,
@@ -156,6 +156,8 @@ func InitLogRusWithFile(level logrus.Level) (*log.Logger, func()) {
 		return logFile.Close()
 	}
 	cleanUpfunc := func() {
+		log.Infof("😎 Thanks for using %s", aurora.Bold(aurora.BrightBlue(moduleName)))
+
 		if err := cleanup(); err != nil {
 			log.Fatalf("failed to close log file: %v", err)
 			os.Exit(1)
@@ -164,9 +166,9 @@ func InitLogRusWithFile(level logrus.Level) (*log.Logger, func()) {
 
 	// Example log messages
 	log.Infof("🤘 Starting %s", aurora.Bold(aurora.BrightBlue(moduleName)))
-	log.Warnf("⚠️ This is a warning message")
-	log.Errorf("🧨 This is an error message")
-	log.Debugf("👀 This is a debug message")
+	// log.Warnf("⚠️ This is a warning message")
+	// log.Errorf("🧨 This is an error message")
+	// log.Debugf("👀 This is a debug message")
 
 	return log, cleanUpfunc
 }
