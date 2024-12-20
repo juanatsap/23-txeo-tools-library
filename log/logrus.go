@@ -172,6 +172,50 @@ func InitLogRusWithFile(level logrus.Level) (*log.Logger, func()) {
 
 	return log, cleanUpfunc
 }
+func InitLogrusOnlyFile(level logrus.Level) (*log.Logger, func()) {
+	// Obtener el nombre del módulo del proyecto
+	moduleName := getModuleName()
+	logFilePath := moduleName + ".log"
+
+	log := InitLogRus()
+
+	// Set log level
+	log.SetLevel(level)
+
+	// Disable default Logrus output to avoid duplicates
+	log.SetOutput(io.Discard)
+
+	// Formateador para el archivo
+	log.SetFormatter(&logrus.TextFormatter{
+		DisableColors:   true,
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05", // Formato claro para fechas
+	})
+
+	// Abrir archivo de log
+	logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("failed to open log file: %v", err)
+	}
+
+	// Configurar salida al archivo
+	log.SetOutput(logFile)
+
+	// Cleanup function para cerrar el archivo al finalizar
+	cleanup := func() error {
+		return logFile.Close()
+	}
+
+	// Función para manejar errores al cerrar
+	cleanUpfunc := func() {
+		if err := cleanup(); err != nil {
+			log.Errorf("failed to close log file: %v", err)
+			os.Exit(1)
+		}
+	}
+
+	return log, cleanUpfunc
+}
 
 /* ╭──────────────────────────────────────────╮ */
 /* │              AUX FUNCTIONS               │ */
