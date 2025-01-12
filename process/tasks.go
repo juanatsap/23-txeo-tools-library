@@ -66,20 +66,36 @@ func GetTaskCategory(taskListName string) string {
 	isAnswered := strings.Contains(taskListNameLower, "answered")
 	isRipper := strings.Contains(taskListNameLower, "ripper")
 	isGenerate := strings.Contains(taskListNameLower, "generate")
-
+	isCatchupII := strings.Contains(taskListNameLower, "catch up")
+	isReport := strings.Contains(taskListNameLower, "report")
+	isHolidays := strings.Contains(taskListNameLower, "holidays")
+	isDiscussion := strings.Contains(taskListNameLower, "discussion")
+	isConversation := strings.Contains(taskListNameLower, "conversation")
+	isSupporting := strings.Contains(taskListNameLower, "supporting")
+	isCss := strings.Contains(taskListNameLower, "css")
+	isEvents := strings.Contains(taskListNameLower, "events")
+	isCNAME := strings.Contains(taskListNameLower, "cname")
+	isWebhooks := strings.Contains(taskListNameLower, "webhooks")
+	isConver := strings.Contains(taskListNameLower, "conver")
+	isProblem := strings.Contains(taskListNameLower, "problem")
+	isDiscussing := strings.Contains(taskListNameLower, "discussing")
+	isCerts := strings.Contains(taskListNameLower, "certs")
+	isInvestigate := strings.Contains(taskListNameLower, "investigate")
+	isGoLive := strings.Contains(taskListNameLower, "go-live")
 	switch {
-	case isCatchup || isMeeting || isCall || isExplaining:
+	case isCatchup || isMeeting || isCall || isExplaining || isSupporting:
 		return "Catchups / Meetings"
 	case isTraining || isDataflow || isImplementation || isScreensets || isSpeaker || isCaptcha ||
 		isEmarsys || isTemplating || isPoC || isDemo || isAdding || isPassword || isRecaptcha ||
 		isLiteReg || isFullReg || isScript || isForms || isBug || isEndpoint ||
 		isInvestigating || isSSO || isFixing || isTesting || isImport || isUseCase || isFix || isUsers || isLaunch || isChecks || isChecking ||
-		isTest || isOidc || isDocumentation || isTicket || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering ||
-		isNull || isRevert || isUpdate || isImproving || isPreparing || isRipper || isGenerate:
+		isTest || isOidc || isConfluence || isDocumentation || isTicket || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering ||
+		isNull || isRevert || isUpdate || isImproving || isPreparing || isRipper || isGenerate || isCatchupII || isCss || isEvents || isProblem || isInvestigate || isGoLive:
 		return "Implementation / Configuration tasks"
-	case isEmail || isDocumentation || isConfluence || isDoc || isAnswer:
+	case isEmail || isDocumentation || isConfluence || isDoc || isAnswer || isReport || isCss || isCNAME || isWebhooks || isCerts:
 		return "Emails / Documentation"
-	case isSlack || isTeams || isChat || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering || isAnswered || isExplaining:
+	case isSlack || isTeams || isChat || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering || isAnswered ||
+		isExplaining || isHolidays || isDiscussion || isConversation || isConver || isDiscussing:
 		return "Slack / Teams Conversations"
 	default:
 		return "Other"
