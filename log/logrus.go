@@ -2,9 +2,12 @@ package core
 
 import (
 	"io"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/logrusorgru/aurora"
 	"github.com/sirupsen/logrus"
@@ -86,6 +89,18 @@ func InitLogRus() *log.Logger {
 
 	// ExampleLogrus()
 	return log.New()
+}
+func InitLogRusRecovery() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+					"error": err,
+				})
+			}
+		}()
+		c.Next()
+	}
 }
 func ExampleLogrus() {
 
@@ -236,4 +251,51 @@ func getModuleName() string {
 
 	// Return the module name
 	return modFile.Module.Mod.Path
+}
+
+func LoggerForGin() gin.HandlerFunc {
+
+	logger := InitLogRus()
+
+	return func(c *gin.Context) {
+		// Start timer
+		start := time.Now()
+		path := c.Request.URL.Path
+		rawQuery := c.Request.URL.RawQuery
+
+		// Process request
+		c.Next()
+
+		// Stop timer
+		end := time.Now()
+		latency := end.Sub(start)
+
+		clientIP := c.ClientIP()
+		method := c.Request.Method
+		statusCode := c.Writer.Status()
+		errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
+
+		if rawQuery != "" {
+			path = path + "?" + rawQuery
+		}
+
+		// You can add more fields here if you like
+		entry := logger.WithFields(log.Fields{
+			"status":   statusCode,
+			"latency":  latency,
+			"clientIP": clientIP,
+			"method":   method,
+			"path":     path,
+		})
+
+		// Decide log level depending on status
+		switch {
+		case statusCode >= 500:
+			entry.Errorf("[GIN] %s", errorMessage)
+		case statusCode >= 400:
+			entry.Warnf("[GIN] %s", errorMessage)
+		default:
+			entry.Infof("[GIN] Request")
+		}
+	}
 }
