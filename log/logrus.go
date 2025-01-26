@@ -1,13 +1,17 @@
 package core
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
+	"txeo-tui-library/ui"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/logrusorgru/aurora"
@@ -265,50 +269,135 @@ func getModuleName() string {
 	return modFile.Module.Mod.Path
 }
 
-func LoggerForGin() gin.HandlerFunc {
-
-	logger := InitLogRus()
-	// logger.Level = logrus.InfoLevel
-
+/* LoggerForGin returns a Gin middleware that logs through a given Logrus logger.*/
+func LoggerForGin(logger *log.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Start timer
+		// Inicia el contador de tiempo
 		start := time.Now()
-		path := c.Request.URL.Path
-		rawQuery := c.Request.URL.RawQuery
 
-		// Process request
+		// Procesa la petición
 		c.Next()
 
-		// Stop timer
-		end := time.Now()
-		latency := end.Sub(start)
+		// Calcula la latencia
+		stop := time.Now()
+		latency := stop.Sub(start)
+		colorLatencyAsString := GetBackgroundColorForLatency(float64(latency.Seconds()))
 
-		clientIP := c.ClientIP()
+		// Formatea la latencia
+		latencyAsString := lipgloss.NewStyle().Background(lipgloss.Color(colorLatencyAsString)).Render(fmt.Sprintf(" %.3fs ", latency.Seconds()))
+		// Formatea la fecha-hora; Gin usa algo como "2006/01/02 - 15:04:05"
+		stopTime := stop.Format("2006/01/02 - 15:04:05")
+
+		// Datos principales
 		method := c.Request.Method
-		statusCode := c.Writer.Status()
-		errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
-
+		status := c.Writer.Status()
+		path := c.Request.URL.Path
+		rawQuery := c.Request.URL.RawQuery
+		ipColored := ui.ColoredString(c.ClientIP())
+		path = ui.ColoredString(path)
+		method = ui.ColoredString(method)
 		if rawQuery != "" {
 			path = path + "?" + rawQuery
 		}
-		// You can add more fields here if you like
-		entry := logger.WithFields(log.Fields{
-			"status":   statusCode,
-			"latency":  latency,
-			"clientIP": clientIP,
-			"method":   method,
-			"path":     path,
-		})
+		// Aquí coloreamos el IP
 
-		// Decide log level depending on status
+		// Si hubo un error (por ejemplo con c.AbortWithError)
+		errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
+
+		// Selección de colores de estado
+		var statusColor aurora.Value
+		statusSpaced := " " + strconv.Itoa(status) + " "
 		switch {
-		case statusCode >= 500:
-			entry.Errorf("[GIN ERRO] %s", errorMessage)
-		case statusCode >= 400:
-			entry.Warnf("[GIN WARN] %s", errorMessage)
+		case status >= http.StatusInternalServerError:
+			statusColor = aurora.BgRed(aurora.White(statusSpaced))
+		case status >= http.StatusBadRequest:
+			statusColor = aurora.BgYellow(aurora.Black(statusSpaced))
+		case status >= http.StatusMultipleChoices:
+			statusColor = aurora.BgCyan(aurora.Black(statusSpaced))
 		default:
-			entry.Infof("[GIN] INFO")
+			statusColor = aurora.BgGreen(aurora.Black(statusSpaced))
+		}
 
+		// Colores de método
+		var methodColor aurora.Value
+		methodSpaced := " " + method + " "
+		switch method {
+		case "GET":
+			methodColor = aurora.Bold(aurora.Green(methodSpaced))
+		case "POST":
+			methodColor = aurora.Bold(aurora.BgBrightCyan(methodSpaced))
+		case "PUT":
+			methodColor = aurora.Bold(aurora.Blue(methodSpaced))
+		case "DELETE":
+			methodColor = aurora.Bold(aurora.Red(methodSpaced))
+		default:
+			methodColor = aurora.Bold(aurora.White(methodSpaced))
+		}
+
+		// Muestra el error si existe (en rojo)
+		var redError string
+		if errorMessage != "" {
+			redError = " " + aurora.Red(errorMessage).String()
+		}
+
+		// Crea la entrada de log con un par de campos, si lo deseas
+		entry := logger.WithTime(time.Now())
+		if errorMessage != "" {
+			entry = entry.WithField("error", errorMessage)
+		}
+
+		// Formato con la fecha/hora
+		// Ejemplo: [GIN] 2025/01/26 - 09:10:46 | 401 | 1.448125ms | 99.80.255.172 | POST    "/..." <error>
+		lineFormat := "[GIN] %s | %v | %10v | %15s | %-7s %s%s"
+		//           fecha/hora  status latencia   IP            metodo  path     error
+
+		switch {
+		case status >= http.StatusInternalServerError:
+			entry.Errorf(lineFormat,
+				stopTime, statusColor, latencyAsString, ipColored, methodColor, path, redError)
+		case status >= http.StatusBadRequest:
+			entry.Warnf(lineFormat,
+				stopTime, statusColor, latencyAsString, ipColored, methodColor, path, redError)
+		default:
+			entry.Infof(lineFormat,
+				stopTime, statusColor, latencyAsString, ipColored, methodColor, path, redError)
 		}
 	}
+}
+func GetBackgroundColorForLatency(latency float64) string {
+	// Si la latencia es negativa (invalida), forzamos un color "neutro"
+	if latency < 0 {
+		return "#A2079A" // Morado (indicador de error)
+	}
+
+	// Si la latencia supera 5 segundos, usamos rojo máximo
+	if latency >= 5.0 {
+		return "#FF0000"
+	}
+
+	// Busca el rango más cercano en LatencyColorMap
+	var lowerBound, upperBound float64
+	for bound := range ui.LatencyColorMap {
+		if bound <= latency && bound > lowerBound {
+			lowerBound = bound
+		}
+		if bound > latency && (upperBound == 0 || bound < upperBound) {
+			upperBound = bound
+		}
+	}
+
+	// Interpolar entre lowerBound y upperBound
+	lowerColor := ui.LatencyColorMap[lowerBound]
+	upperColor := ui.LatencyColorMap[upperBound]
+
+	// Si no hay interpolación posible, devuelve el color más cercano
+	if upperBound == 0 || lowerBound == upperBound {
+		return lowerColor
+	}
+
+	// Porcentaje de interpolación
+	t := (latency - lowerBound) / (upperBound - lowerBound)
+
+	// Interpolar colores (de #RRGGBB)
+	return ui.InterpolateHexColor(lowerColor, upperColor, t)
 }
