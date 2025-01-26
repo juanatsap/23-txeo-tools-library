@@ -11,6 +11,7 @@ import (
 	"time"
 	"txeo-tui-library/ui"
 
+	"github.com/briandowns/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -274,9 +275,15 @@ func LoggerForGin(logger *log.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Inicia el contador de tiempo
 		start := time.Now()
-
+		// logger.Info(strutil.DrawBox("Starting request...", 20, strutil.Center))
 		// Procesa la petición
+
+		s := spinner.New(spinner.CharSets[9], 100*time.Millisecond) // Build our new spinner
+		s.Start()                                                   // Start the spinner
+
 		c.Next()
+
+		s.Stop()
 
 		// Calcula la latencia
 		stop := time.Now()
@@ -296,13 +303,38 @@ func LoggerForGin(logger *log.Logger) gin.HandlerFunc {
 		ipColored := ui.ColoredString(c.ClientIP())
 		path = ui.ColoredString(path)
 		method = ui.ColoredString(method)
+		// Extract error reason if status is 401
+		var reason string
+		if status == http.StatusUnauthorized {
+			// Check if reason exists in `Gin` errors
+			if len(c.Errors) > 0 {
+				reason = c.Errors.ByType(gin.ErrorTypePrivate).String()
+			}
+
+			// Fall back to a custom header for the reason if available
+			if reason == "" {
+				reason = c.GetHeader("X-401-Reason") // Example: Use a custom header
+			}
+
+			// Default reason if none is set
+			if reason == "" {
+				reason = "Unauthorized: No further details provided"
+			}
+		}
+
+		// Format reason for logging (optional)
+		formattedReason := ""
+		if reason != "" {
+			formattedReason = fmt.Sprintf(" | Reason: %s", ui.ColoredString(reason))
+		}
+
 		if rawQuery != "" {
 			path = path + "?" + rawQuery
 		}
 		// Aquí coloreamos el IP
 
 		// Si hubo un error (por ejemplo con c.AbortWithError)
-		errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
+		// errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
 
 		// Selección de colores de estado
 		var statusColor aurora.Value
@@ -335,32 +367,39 @@ func LoggerForGin(logger *log.Logger) gin.HandlerFunc {
 		}
 
 		// Muestra el error si existe (en rojo)
-		var redError string
-		if errorMessage != "" {
-			redError = " " + aurora.Red(errorMessage).String()
-		}
+		// var redError string
+		// if errorMessage != "" {
+		// 	redError = " " + aurora.Red(errorMessage).String()
+		// }
 
-		// Crea la entrada de log con un par de campos, si lo deseas
+		// // Crea la entrada de log con un par de campos, si lo deseas
 		entry := logger.WithTime(time.Now())
-		if errorMessage != "" {
-			entry = entry.WithField("error", errorMessage)
-		}
+		// if errorMessage != "" {
+		// 	entry = entry.WithField("error", errorMessage)
+		// }
 
 		// Formato con la fecha/hora
 		// Ejemplo: [GIN] 2025/01/26 - 09:10:46 | 401 | 1.448125ms | 99.80.255.172 | POST    "/..." <error>
-		lineFormat := "[GIN] %s | %v | %10v | %15s | %-7s %s%s"
+		lineFormat := "[GIN] | %-20s | %-20s | %-10s | %-29s | %-5s | %s %s"
+
 		//           fecha/hora  status latencia   IP            metodo  path     error
+		line := fmt.Sprintf(lineFormat,
+			stopTime,
+			latencyAsString,
+			ipColored,
+			methodColor,
+			path,
+			statusColor,
+			formattedReason,
+		)
 
 		switch {
 		case status >= http.StatusInternalServerError:
-			entry.Errorf(lineFormat,
-				stopTime, statusColor, latencyAsString, ipColored, methodColor, path, redError)
+			entry.Error(line)
 		case status >= http.StatusBadRequest:
-			entry.Warnf(lineFormat,
-				stopTime, statusColor, latencyAsString, ipColored, methodColor, path, redError)
+			entry.Warnln(line)
 		default:
-			entry.Infof(lineFormat,
-				stopTime, statusColor, latencyAsString, ipColored, methodColor, path, redError)
+			entry.Println(line)
 		}
 	}
 }
