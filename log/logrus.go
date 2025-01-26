@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -79,6 +80,17 @@ func InitLogRus() *log.Logger {
 	log.SetFormatter(&log.TextFormatter{
 		ForceColors:      true,
 		DisableTimestamp: true,
+		FullTimestamp:    true,
+		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
+			// filename := filepath.Base(f.File)
+			// return fmt.Sprintf("%s:%d", filename, f.Line), filepath.Base(f.Function)
+			return "", ""
+		},
+		TimestampFormat: "2006-01-02 15:04:05",
+		DisableQuote:    true,
+		DisableSorting:  true,
+		// FullTimestamp:   true,
+		// DisableColors:   false,
 
 		// DisableColors: true,
 	})
@@ -256,6 +268,7 @@ func getModuleName() string {
 func LoggerForGin() gin.HandlerFunc {
 
 	logger := InitLogRus()
+	// logger.Level = logrus.InfoLevel
 
 	return func(c *gin.Context) {
 		// Start timer
@@ -278,7 +291,6 @@ func LoggerForGin() gin.HandlerFunc {
 		if rawQuery != "" {
 			path = path + "?" + rawQuery
 		}
-
 		// You can add more fields here if you like
 		entry := logger.WithFields(log.Fields{
 			"status":   statusCode,
@@ -291,11 +303,12 @@ func LoggerForGin() gin.HandlerFunc {
 		// Decide log level depending on status
 		switch {
 		case statusCode >= 500:
-			entry.Errorf("[GIN] %s", errorMessage)
+			entry.Errorf("[GIN ERRO] %s", errorMessage)
 		case statusCode >= 400:
-			entry.Warnf("[GIN] %s", errorMessage)
+			entry.Warnf("[GIN WARN] %s", errorMessage)
 		default:
-			entry.Infof("[GIN] Request")
+			entry.Infof("[GIN] INFO")
+
 		}
 	}
 }
