@@ -322,6 +322,10 @@ func LoggerForGin(logger *log.Logger) gin.HandlerFunc {
 			}
 		}
 
+		if status == http.StatusInternalServerError {
+			reason = c.Errors.ByType(gin.ErrorTypePrivate).String()
+		}
+
 		// Format reason for logging (optional)
 		formattedReason := ""
 		if reason != "" {
