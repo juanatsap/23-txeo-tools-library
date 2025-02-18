@@ -82,17 +82,48 @@ func GetTaskCategory(taskListName string) string {
 	isCerts := strings.Contains(taskListNameLower, "certs")
 	isInvestigate := strings.Contains(taskListNameLower, "investigate")
 	isGoLive := strings.Contains(taskListNameLower, "go-live")
+	isBackend := strings.Contains(taskListNameLower, "backend")
+	isNextSteps := strings.Contains(taskListNameLower, "next steps")
+	isGithub := strings.Contains(taskListNameLower, "github")
+	isData := strings.Contains(taskListNameLower, "data")
+	isDataFlow := strings.Contains(taskListNameLower, "dataflow")
+	isIncidence := strings.Contains(taskListNameLower, "incidence")
+	isExtensions := strings.Contains(taskListNameLower, "extensions")
+	isArrays := strings.Contains(taskListNameLower, "arrays")
+	isCLP := strings.Contains(taskListNameLower, "clp")
+	isStruct := strings.Contains(taskListNameLower, "struct")
+	isStructure := strings.Contains(taskListNameLower, "structure")
+	isLIVX := strings.Contains(taskListNameLower, "livx")
+	isRegistrationCompletion := strings.Contains(taskListNameLower, "registration completion")
+	isTypescript := strings.Contains(taskListNameLower, "typescript")
+	isReact := strings.Contains(taskListNameLower, "react")
+	isSaturday := strings.Contains(taskListNameLower, "saturday")
+	isSunday := strings.Contains(taskListNameLower, "sunday")
+	isInvoice := strings.Contains(taskListNameLower, "invoice")
+	isNeopoly := strings.Contains(taskListNameLower, "neopoly")
+	isDeletionProcess := strings.Contains(taskListNameLower, "deletion process")
+	isDeletion := strings.Contains(taskListNameLower, "deletion")
+	isUserFlows := strings.Contains(taskListNameLower, "user flows")
+	isLogs := strings.Contains(taskListNameLower, "logs")
+	isCreatingSystem := strings.Contains(taskListNameLower, "creating system")
+	isResponsive := strings.Contains(taskListNameLower, "responsive")
+	isFantasy := strings.Contains(taskListNameLower, "fantasy")
+	isTasks := strings.Contains(taskListNameLower, "tasks")
+
 	switch {
-	case isCatchup || isMeeting || isCall || isExplaining || isSupporting:
+	case isCatchup || isMeeting || isCall || isExplaining || isSupporting || isSaturday || isSunday || isInvoice || isLIVX || isNeopoly || isCreatingSystem || isResponsive || isFantasy || isTasks:
 		return "Catchups / Meetings"
-	case isTraining || isDataflow || isImplementation || isScreensets || isSpeaker || isCaptcha ||
+	case isTraining || isDataflow || isImplementation || isScreensets || isSpeaker || isCaptcha || isBackend || isGithub || isData || isDataFlow || isExtensions ||
 		isEmarsys || isTemplating || isPoC || isDemo || isAdding || isPassword || isRecaptcha ||
+		isRegistrationCompletion || isTypescript || isReact || isArrays || isCLP || isStruct || isStructure ||
 		isLiteReg || isFullReg || isScript || isForms || isBug || isEndpoint ||
 		isInvestigating || isSSO || isFixing || isTesting || isImport || isUseCase || isFix || isUsers || isLaunch || isChecks || isChecking ||
 		isTest || isOidc || isConfluence || isDocumentation || isTicket || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering ||
-		isNull || isRevert || isUpdate || isImproving || isPreparing || isRipper || isGenerate || isCatchupII || isCss || isEvents || isProblem || isInvestigate || isGoLive:
+		isNull || isRevert || isUpdate || isImproving || isPreparing || isRipper || isGenerate || isCatchupII || isCss || isEvents || isProblem || isInvestigate || isGoLive || isLogs ||
+		isDeletionProcess || isDeletion || isUserFlows:
 		return "Implementation / Configuration tasks"
-	case isEmail || isDocumentation || isConfluence || isDoc || isAnswer || isReport || isCss || isCNAME || isWebhooks || isCerts:
+	case isEmail || isDocumentation || isConfluence || isDoc || isAnswer || isReport || isCss || isCNAME || isWebhooks || isCerts,
+		isNextSteps || isIncidence:
 		return "Emails / Documentation"
 	case isSlack || isTeams || isChat || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering || isAnswered ||
 		isExplaining || isHolidays || isDiscussion || isConversation || isConver || isDiscussing:
