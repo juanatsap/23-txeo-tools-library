@@ -109,6 +109,15 @@ func GetTaskCategory(taskListName string) string {
 	isResponsive := strings.Contains(taskListNameLower, "responsive")
 	isFantasy := strings.Contains(taskListNameLower, "fantasy")
 	isTasks := strings.Contains(taskListNameLower, "tasks")
+	isLPC := strings.Contains(taskListNameLower, "lpc")
+	isOIDC := strings.Contains(taskListNameLower, "oidc")
+	isAPIKey := strings.Contains(taskListNameLower, "api key")
+	isBOTF := strings.Contains(taskListNameLower, "botf")
+	isEnvFiles := strings.Contains(taskListNameLower, "env files")
+	isIssues := strings.Contains(taskListNameLower, "issues")
+	isIssue := strings.Contains(taskListNameLower, "issue")
+	isPreferences := strings.Contains(taskListNameLower, "preferences")
+	isFrontal := strings.Contains(taskListNameLower, "frontal")
 
 	switch {
 	case isCatchup || isMeeting || isCall || isExplaining || isSupporting || isSaturday || isSunday || isInvoice || isLIVX || isNeopoly || isCreatingSystem || isResponsive || isFantasy || isTasks:
@@ -120,13 +129,13 @@ func GetTaskCategory(taskListName string) string {
 		isInvestigating || isSSO || isFixing || isTesting || isImport || isUseCase || isFix || isUsers || isLaunch || isChecks || isChecking ||
 		isTest || isOidc || isConfluence || isDocumentation || isTicket || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering ||
 		isNull || isRevert || isUpdate || isImproving || isPreparing || isRipper || isGenerate || isCatchupII || isCss || isEvents || isProblem || isInvestigate || isGoLive || isLogs ||
-		isDeletionProcess || isDeletion || isUserFlows:
+		isDeletionProcess || isDeletion || isUserFlows || isLPC || isOIDC || isAPIKey || isBOTF || isEnvFiles || isPreferences || isFrontal:
 		return "Implementation / Configuration tasks"
 	case isEmail || isDocumentation || isConfluence || isDoc || isAnswer || isReport || isCss || isCNAME || isWebhooks || isCerts,
 		isNextSteps || isIncidence:
 		return "Emails / Documentation"
 	case isSlack || isTeams || isChat || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering || isAnswered ||
-		isExplaining || isHolidays || isDiscussion || isConversation || isConver || isDiscussing:
+		isExplaining || isHolidays || isDiscussion || isConversation || isConver || isDiscussing || isIssue || isIssues:
 		return "Slack / Teams Conversations"
 	default:
 		return "Other"
