@@ -118,23 +118,29 @@ func GetTaskCategory(taskListName string) string {
 	isIssue := strings.Contains(taskListNameLower, "issue")
 	isPreferences := strings.Contains(taskListNameLower, "preferences")
 	isFrontal := strings.Contains(taskListNameLower, "frontal")
-
+	isMonitoring := strings.Contains(taskListNameLower, "monitoring")
+	isExport := strings.Contains(taskListNameLower, "export")
+	isBlacklist := strings.Contains(taskListNameLower, "blacklist")
+	isCDC := strings.Contains(taskListNameLower, "cdc")
+	isGlances := strings.Contains(taskListNameLower, "glances")
+	isBackfields := strings.Contains(taskListNameLower, "backfields")
+	isBackfill := strings.Contains(taskListNameLower, "backfill")
 	switch {
-	case isCatchup || isMeeting || isCall || isExplaining || isSupporting || isSaturday || isSunday || isInvoice || isLIVX || isNeopoly || isCreatingSystem || isResponsive || isFantasy || isTasks:
+	case isCatchup || isMeeting || isCall || isExplaining || isSupporting || isSaturday || isSunday || isInvoice || isLIVX || isNeopoly || isCreatingSystem || isResponsive || isFantasy:
 		return "Catchups / Meetings"
-	case isTraining || isDataflow || isImplementation || isScreensets || isSpeaker || isCaptcha || isBackend || isGithub || isData || isDataFlow || isExtensions ||
+	case isTraining || isDataflow || isImplementation || isScreensets || isSpeaker || isCaptcha || isBackend || isGithub || isData || isDataFlow || isExtensions || isAPIKey || isBOTF || isEnvFiles || isIssues || isIssue || isPreferences || isFrontal ||
 		isEmarsys || isTemplating || isPoC || isDemo || isAdding || isPassword || isRecaptcha ||
 		isRegistrationCompletion || isTypescript || isReact || isArrays || isCLP || isStruct || isStructure ||
 		isLiteReg || isFullReg || isScript || isForms || isBug || isEndpoint ||
 		isInvestigating || isSSO || isFixing || isTesting || isImport || isUseCase || isFix || isUsers || isLaunch || isChecks || isChecking ||
 		isTest || isOidc || isConfluence || isDocumentation || isTicket || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering ||
 		isNull || isRevert || isUpdate || isImproving || isPreparing || isRipper || isGenerate || isCatchupII || isCss || isEvents || isProblem || isInvestigate || isGoLive || isLogs ||
-		isDeletionProcess || isDeletion || isUserFlows || isLPC || isOIDC || isAPIKey || isBOTF || isEnvFiles || isPreferences || isFrontal:
+		isDeletionProcess || isDeletion || isUserFlows || isLPC || isOIDC || isAPIKey || isBOTF || isEnvFiles || isPreferences || isFrontal || isGlances || isTasks || isMonitoring || isExport || isBlacklist || isCDC:
 		return "Implementation / Configuration tasks"
-	case isEmail || isDocumentation || isConfluence || isDoc || isAnswer || isReport || isCss || isCNAME || isWebhooks || isCerts,
+	case isEmail || isDocumentation || isConfluence || isDoc || isAnswer || isReport || isCss || isCNAME || isWebhooks || isCerts || isBackfields || isBackfill ||
 		isNextSteps || isIncidence:
 		return "Emails / Documentation"
-	case isSlack || isTeams || isChat || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering || isAnswered ||
+	case isSlack || isTeams || isChat || isWeekly || isMail || isConsent || isSchema || isEnrollment || isKickoff || isAnswering || isAnswered || isMeeting ||
 		isExplaining || isHolidays || isDiscussion || isConversation || isConver || isDiscussing || isIssue || isIssues:
 		return "Slack / Teams Conversations"
 	default:
